@@ -197,6 +197,11 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck(UStaticMeshComponent*
 		return;
 	}
 
+	if (MeshComponent->bHiddenInGame)
+	{
+		return;
+	}
+
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	FString ErrorMessage;
 	FString ObjectName = MeshComponent->GetFullName();

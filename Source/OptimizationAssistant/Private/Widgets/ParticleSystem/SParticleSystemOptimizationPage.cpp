@@ -267,6 +267,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystemCo
 
 			FBoxSphereBounds Bounds = ParticleComponent->CalcBounds(ParticleComponent->GetComponentTransform());
 			float RecommendDrawDistance = FOptimizationAssistantHelpers::ComputeDrawDistanceFromScreenSize(Bounds.SphereRadius, RuleSettings->ParticleSystemCullScreenSize);
+			RecommendDrawDistance *= 2;
 			if (SilentDistance > RecommendDrawDistance)
 			{
 				if (HasActiveParticlesWithLastLODLevel)
