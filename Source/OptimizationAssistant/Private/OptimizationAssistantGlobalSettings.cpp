@@ -64,11 +64,11 @@ float UMeshOptimizationRules::GetRecommendLODScreenSize(int32 InLODIndex)
 
 int32 UMeshOptimizationRules::GetRecommendLODTriangles(int32 InLODIndex, int32 InMaxTriangles)
 {
-	if (InLODIndex >= 0 && InLODIndex < OA_MAX_MESH_LODS)
+	if (InMaxTriangles > MinTrianglesNeededForLOD && InLODIndex >= 0 && InLODIndex < OA_MAX_MESH_LODS)
 	{
 		return InMaxTriangles * BaseLOD0TrianglePercents[InLODIndex];
 	}
-	return -1;
+	return InMaxTriangles;
 }
 
 float UMeshOptimizationRules::GetRecommendLODTrianglesPercent(int32 InLODIndex)
