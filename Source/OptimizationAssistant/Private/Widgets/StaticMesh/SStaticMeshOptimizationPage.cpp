@@ -287,7 +287,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck(UStaticMesh* StaticMe
 			for (int32 ThresholdIndex = RuleSettings->TriangleLODThresholds.Num()-1; ThresholdIndex >=0; --ThresholdIndex)
 			{
 				FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->TriangleLODThresholds[ThresholdIndex];
-				if (MaxTriangles * GlobalCheckSettings->TrianglesErrorScale >= TriangleLODThreshold.Triangles)
+				if (MaxTriangles >= TriangleLODThreshold.Triangles)
 				{
 					if (NumLODs < TriangleLODThreshold.LODNum)
 					{
@@ -297,16 +297,16 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck(UStaticMesh* StaticMe
 				}
 			}
 
-			if (MaxTriangles < RuleSettings->MinTrianglesNeededForLOD && NumLODs > 1) // screen size = 0.35f
-			{
-				if (!MeshName.Contains(TEXT("Grass")) && 
-				    !MeshName.Contains(TEXT("Foliage")) && 
-					!MeshName.Contains(TEXT("Trees")) &&
-					!MeshName.Contains(TEXT("/Plant")))
-				{
-					ErrorMessage += FString::Printf(TEXT("Mesh面数小于[%d]，不建议做多级LOD, 当前有[%d]级.\n"), RuleSettings->MinTrianglesNeededForLOD, NumLODs);
-				}
-			}
+			//if (MaxTriangles < RuleSettings->MinTrianglesNeededForLOD && NumLODs > 1) // screen size = 0.35f
+			//{
+			//	if (!MeshName.Contains(TEXT("Grass")) && 
+			//	    !MeshName.Contains(TEXT("Foliage")) && 
+			//		!MeshName.Contains(TEXT("Trees")) &&
+			//		!MeshName.Contains(TEXT("/Plant")))
+			//	{
+			//		ErrorMessage += FString::Printf(TEXT("Mesh面数小于[%d]，不建议做多级LOD, 当前有[%d]级.\n"), RuleSettings->MinTrianglesNeededForLOD, NumLODs);
+			//	}
+			//}
 
 			if (NumLODs > OA_MAX_MESH_LODS)
 			{
