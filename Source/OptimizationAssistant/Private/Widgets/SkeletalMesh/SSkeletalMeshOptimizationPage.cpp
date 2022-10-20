@@ -294,7 +294,7 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck(USkeletalMesh* Skel
 			for (int32 ThresholdIndex = RuleSettings->TriangleLODThresholds.Num() - 1; ThresholdIndex >= 0; --ThresholdIndex)
 			{
 				FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->TriangleLODThresholds[ThresholdIndex];
-				if (MaxTriangles * GlobalCheckSettings->TrianglesErrorScale >= TriangleLODThreshold.Triangles)
+				if (MaxTriangles >= TriangleLODThreshold.Triangles)
 				{
 					if (NumLODs < TriangleLODThreshold.LODNum)
 					{
