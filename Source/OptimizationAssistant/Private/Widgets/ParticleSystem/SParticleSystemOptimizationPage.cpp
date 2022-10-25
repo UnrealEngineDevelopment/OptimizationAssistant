@@ -5,14 +5,15 @@
 #include "Misc/ScopedSlowTask.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "OptimizationAssistantHelpers.h"
+#include "OptimizationAssistantGlobalSettings.h"
 #include "ParticleSystemOptimizationRules.h"
 #include "Particles/ParticleModuleRequired.h"
 #include "Particles/ParticleEmitter.h"
 #include "Particles/ParticleLODLevel.h"
 #include "Particles/Light/ParticleModuleLight.h"
-#include "OptimizationAssistantGlobalSettings.h"
 #include "Particles/Spawn/ParticleModuleSpawn.h"
 #include "Particles/Spawn/ParticleModuleSpawnPerUnit.h"
+#include "Particles/TypeData/ParticleModuleTypeDataRibbon.h"
 #include "Game/SilentCheckComponent.h"
 
 #pragma optimize("", off)
@@ -327,26 +328,38 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystem* 
 
 		for (UParticleEmitter* Emitter : ParticleSystem->Emitters)
 		{
-			UParticleModuleRequired* RequiredModule = Emitter->GetLODLevel(0)->RequiredModule;
-			if (RequiredModule->MaxDrawCount > RuleSettings->MaxParticleCountToDrawForEmitter)
+			int32 LODLevelIndex = 0;
+			for (UParticleLODLevel* ParticleLODLevel : Emitter->LODLevels)
 			{
-				ErrorMessage += FString::Printf(TEXT("[Emitter=%s]发射器发射的最大粒子数量超过了限制，最大允许粒子数[%d]，当前允许粒子数[%d], 推荐粒子数小于300。\n"), *Emitter->EmitterName.ToString(), RuleSettings->MaxParticleCountToDrawForEmitter, RequiredModule->MaxDrawCount);
-			}
+				if (ParticleLODLevel->RequiredModule && ParticleLODLevel->RequiredModule->MaxDrawCount > RuleSettings->MaxParticleCountToDrawForEmitter)
+				{
+					ErrorMessage += FString::Printf(TEXT("[Emitter=%s,Module=%s,LODLevel=%d]发射的最大粒子数量超过了限制，最大允许粒子数[%d]，当前允许粒子数[MaxDrawCount=%d], 推荐粒子数小于300。\n"), *Emitter->EmitterName.ToString(), *ParticleLODLevel->RequiredModule->GetName(), LODLevelIndex, RuleSettings->MaxParticleCountToDrawForEmitter, ParticleLODLevel->RequiredModule->MaxDrawCount);
+				}
+				else if (UParticleModuleTypeDataRibbon* ModuleRibbon = Cast<UParticleModuleTypeDataRibbon>(ParticleLODLevel->TypeDataModule))
+				{
+					if (ModuleRibbon->MaxTrailCount > 500)
+					{
+						ErrorMessage += FString::Printf(TEXT("[Emitter=%s,Module=%s,LODLevel=%d]发射的最大粒子数量超过了限制，最大允许粒子数[%d]，当前允许粒子数[MaxTrailCount=%d], 推荐粒子数小于300。\n"), *Emitter->EmitterName.ToString(), *ModuleRibbon->GetName(), LODLevelIndex, RuleSettings->MaxParticleCountToDrawForEmitter, ModuleRibbon->MaxTrailCount);
+					}
 
-			for (UParticleModule* ParticleModule : Emitter->GetLODLevel(0)->Modules)
-			{
-				if (UParticleModuleLight* ParticleModuleLight = Cast<UParticleModuleLight>(ParticleModule))
+					if (ModuleRibbon->MaxParticleInTrailCount > 500)
+					{
+						ErrorMessage += FString::Printf(TEXT("[Emitter=%s,Module=%s,LODLevel=%d]发射的最大粒子数量超过了限制，最大允许粒子数[%d]，当前允许粒子数[MaxParticleInTrailCount=%d], 推荐粒子数小于300。\n"), *Emitter->EmitterName.ToString(), *ModuleRibbon->GetName(), LODLevelIndex, RuleSettings->MaxParticleCountToDrawForEmitter, ModuleRibbon->MaxParticleInTrailCount);
+					}
+				}
+				else if (UParticleModuleLight* ParticleModuleLight = Cast<UParticleModuleLight>(ParticleLODLevel))
 				{
 					if (RuleSettings->bCheckHighQualityLights && ParticleModuleLight->bHighQualityLights)
 					{
-						ErrorMessage += FString::Printf(TEXT("发射器启用了高质量光照，真的需要吗?[Emitter=%s,Module=%s]。\n"), *Emitter->EmitterName.ToString(), *ParticleModule->GetName());
+						ErrorMessage += FString::Printf(TEXT("[Emitter=%s,Module=%s,LODLevel=%d]发射器启用了高质量光照，真的需要吗?\n"), *Emitter->EmitterName.ToString(), *ParticleLODLevel->GetName(), LODLevelIndex);
 					}
 
 					if (RuleSettings->bCheckShadowCastingLights && ParticleModuleLight->bShadowCastingLights)
 					{
-						ErrorMessage += FString::Printf(TEXT("发射器启用了阴影投射，真的需要吗?[Emitter=%s,Module=%s]。\n"), *Emitter->EmitterName.ToString(), *ParticleModule->GetName());
+						ErrorMessage += FString::Printf(TEXT("[Emitter=%s,Module=%s,LODLevel=%d]发射器启用了阴影投射，真的需要吗?\n"), *Emitter->EmitterName.ToString(), *ParticleLODLevel->GetName(), LODLevelIndex);
 					}
 				}
+				++LODLevelIndex;
 			}
 		}
 	}
