@@ -565,6 +565,7 @@ FText SOptimizationAssistantView::GetSelectedPlatformComboText() const
 
 void SOptimizationAssistantView::ProcessOptimizationCheck()
 {
+	HandleSaveOptimizationRules();
 	int32 TaskCount = 0;
 	TaskCount = EnableStaticMeshCheck == ECheckBoxState::Checked ? ++TaskCount : TaskCount;
 	TaskCount = EnableSkeletalMeshCheck == ECheckBoxState::Checked ? ++TaskCount : TaskCount;
