@@ -5,19 +5,25 @@
 
 #define OA_MAX_MESH_LODS 5
 
+UENUM()
 enum EOptimizationCheckFlags
 {
-	OCF_NoFlags = 0x00000000,
-	OCF_CullDistance = 0x00000001,
-	OCF_NetCullDistance = 0x00000002,
-	OCF_MeshLODNum = 0x00000004,
-	OCF_MeshLODTriangles = 0x00000008,
-	OCF_MeshLODScreenSize = 0x00000010,
-	OCF_MeshLODUVChannels = 0x00000020,
-	OCF_AnimationFrameRate = 0x00000040,
-	OCF_ParticleSystem = 0x00000080,
+	OCF_NoFlags UMETA(Hidden),
+	OCF_CullDistance UMETA(DisplayName = "CullDistance"),
+	OCF_NetCullDistance UMETA(DisplayName = "NetCullDistance"),
+	OCF_TrianglesLODNum UMETA(DisplayName = "TrianglesLODNum"),
+	OCF_LODNumLimit UMETA(DisplayName = "LODNumLimit"),
+	OCF_LODTrianglesLimit UMETA(DisplayName = "LODTrianglesLimit"),
+	OCF_LODScreenSizeLimit UMETA(DisplayName = "LODScreenSizeLimit"),
+	OCF_LODMaterialNumLimit UMETA(DisplayName = "LODMaterialNumLimit"),
+	OCF_LODUVChannelLimit UMETA(DisplayName = "LODUVChannelLimit"),
+	OCF_LODDuplicateMaterials UMETA(DisplayName = "LODDuplicateMaterials"),
+	OCF_MeshMaterialNumLimit UMETA(DisplayName = "MeshMaterialNumLimit"),
+	OCF_Max UMETA(Hidden),
 };
+const int32 OCF_DefaultValue = 0xFFFF;
 
+#define EMUM_TO_FLAG(Enum) (1 << static_cast<uint32>(Enum))
 
 enum class EOptimizationCheckType
 {
@@ -40,6 +46,9 @@ public:
 	UPROPERTY(config, EditAnywhere, Category = Replication)
 	float MaxNetCullDistanceSquared;
 
+	UPROPERTY(config, EditAnywhere, meta = (Bitmask, BitmaskEnum = EOptimizationCheckFlags))
+	uint32 OptimizationFlagsBitmask;
+
 	EOptimizationCheckType OptimizationCheckType;
 
 	float CullDistanceErrorScale;
@@ -47,6 +56,11 @@ public:
 	float TrianglesErrorScale;
 
 	bool IsInNeverCheckDirectory(const FString& InPath);
+
+	bool HasAnyFlags(EOptimizationCheckFlags FlagsToCheck)const
+	{
+		return (OptimizationFlagsBitmask & EMUM_TO_FLAG(FlagsToCheck)) != 0;
+	}
 };
 
 USTRUCT()
@@ -78,9 +92,6 @@ public:
 	// 如果Mesh组件没有赋予有效的Mesh，则跳过该组件的检查。
 	UPROPERTY(EditAnywhere, config)
 	bool bSkipComponentIfMeshIsNone;
-
-	UPROPERTY(EditAnywhere, config)
-	bool bMeshesDuplicateSections;
 
 	// 模型最多可有的三级面数
 	UPROPERTY(EditAnywhere, config, meta = (UIMin = "1", UIMax = "50000", ClampMin = "1", ClampMax = "50000"))
