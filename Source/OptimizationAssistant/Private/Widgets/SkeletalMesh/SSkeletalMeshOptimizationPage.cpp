@@ -304,10 +304,10 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck(USkeletalMesh* Skel
 				}
 			}
 
-			if (MaxTriangles < RuleSettings->MinTrianglesNeededForLOD && NumLODs > 1) // screen size = 0.35f
-			{
-				ErrorMessage += FString::Printf(TEXT("Mesh面数小于[%d]，不建议做多级LOD, 当前有[%d]级.\n"), RuleSettings->MinTrianglesNeededForLOD, NumLODs);
-			}
+			//if (MaxTriangles < RuleSettings->MinTrianglesNeededForLOD && NumLODs > 1) // screen size = 0.35f
+			//{
+			//	ErrorMessage += FString::Printf(TEXT("Mesh面数小于[%d]，不建议做多级LOD, 当前有[%d]级.\n"), RuleSettings->MinTrianglesNeededForLOD, NumLODs);
+			//}
 
 			if (NumLODs > OA_MAX_MESH_LODS)
 			{
