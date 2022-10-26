@@ -5,6 +5,20 @@
 
 #define OA_MAX_MESH_LODS 5
 
+enum EOptimizationCheckFlags
+{
+	OCF_NoFlags = 0x00000000,
+	OCF_CullDistance = 0x00000001,
+	OCF_NetCullDistance = 0x00000002,
+	OCF_MeshLODNum = 0x00000004,
+	OCF_MeshLODTriangles = 0x00000008,
+	OCF_MeshLODScreenSize = 0x00000010,
+	OCF_MeshLODUVChannels = 0x00000020,
+	OCF_AnimationFrameRate = 0x00000040,
+	OCF_ParticleSystem = 0x00000080,
+};
+
+
 enum class EOptimizationCheckType
 {
 	OCT_None,
