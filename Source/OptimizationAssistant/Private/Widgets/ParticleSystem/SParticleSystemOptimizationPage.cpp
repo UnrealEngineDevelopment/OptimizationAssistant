@@ -16,8 +16,6 @@
 #include "Particles/TypeData/ParticleModuleTypeDataRibbon.h"
 #include "Game/SilentCheckComponent.h"
 
-#pragma optimize("", off)
-
 SParticleSystemOptimizationPage::SParticleSystemOptimizationPage()
 {
 
@@ -64,6 +62,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	
 	TArray<UParticleSystem*> ProcessedParticleSystems;
+	ProcessedParticleSystems.Add(nullptr); // If UParticleSystem is nullptr, Skip check.
 
 	if (GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_World ||
 		GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_WorldDependentAssets)
@@ -73,6 +72,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 		SlowTask.MakeDialog(true);
 
 		TArray<UParticleSystemComponent*> ProcessedComponents;
+		ProcessedComponents.Add(nullptr); // If UParticleSystemComponent is nullptr, Skip check.
 
 		for (FActorIterator ActorIterator(GWorld); ActorIterator; ++ActorIterator)
 		{
@@ -87,6 +87,12 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 			{
 				continue;
 			}
+
+			if (Actor->ActorHasTag(GlobalCheckSettings->DisableCheckTagName))
+			{
+				continue;
+			}
+
 			TInlineComponentArray<UParticleSystemComponent*> ParticleSystemComponents;
 			Actor->GetComponents<UParticleSystemComponent>(ParticleSystemComponents);
 			for (UParticleSystemComponent* ParticleComponent : ParticleSystemComponents)
@@ -101,7 +107,12 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 					continue;
 				}
 
-				if (ParticleComponent->Template && !ProcessedParticleSystems.Contains(ParticleComponent->Template))
+				if (ParticleComponent->ComponentHasTag(GlobalCheckSettings->DisableCheckTagName))
+				{
+					continue;
+				}
+
+				if (!ProcessedParticleSystems.Contains(ParticleComponent->Template))
 				{
 					ProcessedParticleSystems.Add(ParticleComponent->Template);
 					ProcessOptimizationCheck(ParticleComponent->Template, *ScopeOutputArchive);
@@ -175,7 +186,6 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 			}
 		}
 	}
-	
 	GEngine->TrimMemory();
 }
 
@@ -198,6 +208,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystemCo
 		// 受距离裁剪体积控制
 		return;
 	}
+
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	FString ErrorMessage;
 	FString ObjectName = ParticleComponent->GetFullName();
@@ -246,12 +257,10 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystemCo
 								MaxBurstCount += ModuleSpawnPerUnit->GetMaximumBurstCount();
 							}
 						}
-
 						HasActiveParticlesWithLastLODLevel = (HasActiveParticlesWithLastLODLevel && MaxSpawnRate>0.0f && MaxBurstCount > 0);
 					}
 				}
 			}
-
 
 			float SilentDistance = 0.0f;
 			if (AActor* Owner = ParticleComponent->GetOwner())
@@ -370,5 +379,3 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystem* 
 		Ar.Logf(TEXT("%s"), *ErrorMessage);
 	}
 }
-
-#pragma optimize("", on)

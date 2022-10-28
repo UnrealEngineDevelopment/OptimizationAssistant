@@ -60,6 +60,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 
 	TArray<UStaticMesh*> ProcessedMeshes;
+	ProcessedMeshes.Add(nullptr); // If UStaticMesh is nullptr,skip check.
 
 	if (GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_World ||
 		GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_WorldDependentAssets)
@@ -69,6 +70,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 		SlowTask1.MakeDialog(true);
 
 		TArray<UStaticMeshComponent*> ProcessedComponents;
+		ProcessedComponents.Add(nullptr); // If UStaticMeshComponent is nullptr,skip check.
 
 		for (FActorIterator ActorIterator(GWorld); ActorIterator; ++ActorIterator)
 		{
@@ -79,10 +81,17 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 			SlowTask1.EnterProgressFrame(1.f);
 			//float ProgressPercent = ActorIterator.GetProgressNumerator() / ProgressDenominator;
 			AActor* Actor = *ActorIterator;
+
 			if (Actor->IsEditorOnly())
 			{
 				continue;
 			}
+
+			if (Actor->ActorHasTag(GlobalCheckSettings->DisableCheckTagName))
+			{
+				continue;
+			}
+
 			TInlineComponentArray<UStaticMeshComponent*> StaticMeshComponents;
 			Actor->GetComponents<UStaticMeshComponent>(StaticMeshComponents, true);
 			for (UStaticMeshComponent* MeshComponent : StaticMeshComponents)
@@ -97,7 +106,12 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 					continue;
 				}
 
-				if (MeshComponent->GetStaticMesh() && !ProcessedMeshes.Contains(MeshComponent->GetStaticMesh()))
+				if (MeshComponent->ComponentHasTag(GlobalCheckSettings->DisableCheckTagName))
+				{
+					continue;
+				}
+
+				if (!ProcessedMeshes.Contains(MeshComponent->GetStaticMesh()))
 				{
 					ProcessedMeshes.Add(MeshComponent->GetStaticMesh());
 					ProcessOptimizationCheck(MeshComponent->GetStaticMesh(), *ScopeOutputArchive);
@@ -116,7 +130,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 	    GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_WorldDependentAssets)
 	{
 		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-		TArray<FAssetData> StaticMeshList;
+		TArray<FAssetData> StaticMeshAssetList;
 		FARFilter Filter;
 		Filter.ClassNames.Add(UStaticMesh::StaticClass()->GetFName());
 		//removed path as a filter as it causes two large lists to be sorted.  Filtering on "game" directory on iteration
@@ -137,21 +151,21 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 			Filter.PackageNames.Append(DependentPackages.Array());
 		}
 
-		AssetRegistryModule.Get().GetAssets(Filter, StaticMeshList);
+		AssetRegistryModule.Get().GetAssets(Filter, StaticMeshAssetList);
 
-		FScopedSlowTask AssetSlowTask(StaticMeshList.Num(), FText::FromString(TEXT("Static Mesh Optimization Check")));
+		FScopedSlowTask AssetSlowTask(StaticMeshAssetList.Num(), FText::FromString(TEXT("Static Mesh Optimization Check")));
 		AssetSlowTask.MakeDialog(true);
 
-		for (int32 Index = 0; Index < StaticMeshList.Num(); ++Index)
+		for (int32 Index = 0; Index < StaticMeshAssetList.Num(); ++Index)
 		{
 			if (AssetSlowTask.ShouldCancel())
 			{
 				break;
 			}
 			AssetSlowTask.EnterProgressFrame(1);
-			const FAssetData& AssetData = StaticMeshList[Index];
+			const FAssetData& AssetData = StaticMeshAssetList[Index];
 			FString Filename = AssetData.ObjectPath.ToString();
-			if (Filename.StartsWith("/Game") && !GetMutableDefault<UGlobalCheckSettings>()->IsInNeverCheckDirectory(Filename))
+			if (Filename.StartsWith("/Game") && !GlobalCheckSettings->IsInNeverCheckDirectory(Filename))
 			{
 				UStaticMesh* StaticMesh = Cast<UStaticMesh>(AssetData.GetAsset());
 				if (!ProcessedMeshes.Contains(StaticMesh))
@@ -160,7 +174,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 					ProcessOptimizationCheck(StaticMesh, *ScopeOutputArchive);
 				}
 			}
-			StaticMeshList.RemoveAtSwap(Index);
+			StaticMeshAssetList.RemoveAtSwap(Index);
 			if ((Index % 500) == 0)
 			{
 				GEngine->TrimMemory();

@@ -74,6 +74,8 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 	
 	TArray<USkeletalMesh*> ProcessedMeshes;
 	TArray<UAnimSequence*> ProcessedAnims;
+	ProcessedMeshes.Add(nullptr); // If USkeletalMesh is nullptr,skip check.
+	ProcessedAnims.Add(nullptr);  // If UAnimSequence is nullptr,skip check.
 
 	if (GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_World || 
 		GlobalCheckSettings->OptimizationCheckType == EOptimizationCheckType::OCT_WorldDependentAssets)
@@ -83,6 +85,7 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 		SlowTask.MakeDialog(true);
 
 		TArray<USkeletalMeshComponent*> ProcessedComponents;
+		ProcessedComponents.Add(nullptr); // If USkeletalMeshComponent is nullptr, Skip check.
 
 		for (FActorIterator ActorIterator(GWorld); ActorIterator; ++ActorIterator)
 		{
@@ -97,6 +100,12 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 			{
 				continue;
 			}
+
+			if (Actor->ActorHasTag(GlobalCheckSettings->DisableCheckTagName))
+			{
+				continue;
+			}
+
 			TInlineComponentArray<USkeletalMeshComponent*> SkeletalMeshComponents;
 			Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
 			for (USkeletalMeshComponent* MeshComponent : SkeletalMeshComponents)
@@ -111,7 +120,12 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 					continue;
 				}
 
-				if (MeshComponent->SkeletalMesh && !ProcessedMeshes.Contains(MeshComponent->SkeletalMesh))
+				if (MeshComponent->ComponentHasTag(GlobalCheckSettings->DisableCheckTagName))
+				{
+					continue;
+				}
+
+				if (!ProcessedMeshes.Contains(MeshComponent->SkeletalMesh))
 				{
 					ProcessedMeshes.Add(MeshComponent->SkeletalMesh);
 					ProcessOptimizationCheck(MeshComponent->SkeletalMesh, *SkeletalMeshArchive);

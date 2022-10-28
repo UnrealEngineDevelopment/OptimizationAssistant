@@ -2,6 +2,7 @@
 
 UGlobalCheckSettings::UGlobalCheckSettings()
 	: Super()
+	, DisableCheckTagName(TEXT("TAG_DOAC"))
 	, DirectoriesToNeverCheck()
 	, MaxNetCullDistanceSquared(15000.f*15000.f)
 	, OptimizationFlagsBitmask(OCF_DefaultValue)

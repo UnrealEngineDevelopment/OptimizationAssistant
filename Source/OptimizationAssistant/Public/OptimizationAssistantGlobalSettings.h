@@ -39,6 +39,10 @@ class UGlobalCheckSettings : public UObject
 	GENERATED_BODY()
 public:
 	UGlobalCheckSettings();
+
+	UPROPERTY(VisibleAnywhere)
+	FName DisableCheckTagName;
+	
 	UPROPERTY(config, EditAnywhere,meta = (DisplayName = "Directories to never Check", LongPackageName))
 	TArray<FDirectoryPath> DirectoriesToNeverCheck;
 
