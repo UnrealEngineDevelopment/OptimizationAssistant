@@ -157,7 +157,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 		FScopedSlowTask AssetSlowTask(ParticleSystemList.Num(), FText::FromString(TEXT("Particle System Optimization Check")));
 		AssetSlowTask.MakeDialog(true);
 
-		for (int32 Index = 0; Index < ParticleSystemList.Num(); ++Index)
+		for (int32 Index = ParticleSystemList.Num() - 1; Index >= 0; --Index)
 		{
 			if (AssetSlowTask.ShouldCancel())
 			{
@@ -179,7 +179,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 				}
 			}
 
-			ParticleSystemList.RemoveAtSwap(Index);
+			ParticleSystemList.RemoveAtSwap(Index,1,false);
 			if ((Index % 500) == 0)
 			{
 				GEngine->TrimMemory();

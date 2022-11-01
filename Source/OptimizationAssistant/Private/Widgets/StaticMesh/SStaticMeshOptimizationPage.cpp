@@ -156,7 +156,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 		FScopedSlowTask AssetSlowTask(StaticMeshAssetList.Num(), FText::FromString(TEXT("Static Mesh Optimization Check")));
 		AssetSlowTask.MakeDialog(true);
 
-		for (int32 Index = 0; Index < StaticMeshAssetList.Num(); ++Index)
+		for (int32 Index = StaticMeshAssetList.Num() - 1; Index >= 0; --Index)
 		{
 			if (AssetSlowTask.ShouldCancel())
 			{
@@ -174,14 +174,13 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 					ProcessOptimizationCheck(StaticMesh, *ScopeOutputArchive);
 				}
 			}
-			StaticMeshAssetList.RemoveAtSwap(Index);
+			StaticMeshAssetList.RemoveAtSwap(Index, 1, false);
 			if ((Index % 500) == 0)
 			{
 				GEngine->TrimMemory();
 			}
 		}
 	}
-
 	GEngine->TrimMemory();
 }
 

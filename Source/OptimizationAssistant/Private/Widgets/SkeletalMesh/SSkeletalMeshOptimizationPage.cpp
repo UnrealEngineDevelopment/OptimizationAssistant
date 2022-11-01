@@ -180,7 +180,7 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 		FScopedSlowTask AssetSlowTask(SkeletalMeshList.Num(), FText::FromString(TEXT("Skeletal Mesh Optimization Check")));
 		AssetSlowTask.MakeDialog(true);
 
-		for (int32 Index = 0; Index < SkeletalMeshList.Num(); ++Index)
+		for (int32 Index = SkeletalMeshList.Num() - 1; Index >= 0; --Index)
 		{
 			if (AssetSlowTask.ShouldCancel())
 			{
@@ -210,7 +210,7 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 				}
 			}
 
-			SkeletalMeshList.RemoveAtSwap(Index);
+			SkeletalMeshList.RemoveAtSwap(Index, 1, false);
 			if ((Index % 500) == 0)
 			{
 				GEngine->TrimMemory();
