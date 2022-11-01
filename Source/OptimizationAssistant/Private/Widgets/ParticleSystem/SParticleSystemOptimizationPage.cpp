@@ -179,7 +179,7 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck()
 				}
 			}
 
-			ParticleSystemList.RemoveAtSwap(Index,1,false);
+			ParticleSystemList.RemoveAtSwap(Index, 1, false);
 			if ((Index % 500) == 0)
 			{
 				GEngine->TrimMemory();
