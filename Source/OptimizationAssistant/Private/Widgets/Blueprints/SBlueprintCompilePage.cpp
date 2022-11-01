@@ -236,11 +236,24 @@ void SBlueprintCompilePage::BuildBlueprintAssetList()
 	{
 		UE_LOG(LogCompileAllBlueprints, Display, TEXT("Loading Asset Registry..."));
 		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(AssetRegistryConstants::ModuleName);
-		AssetRegistryModule.Get().SearchAllAssets(/*bSynchronousSearch =*/true);
+		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+		AssetRegistry.SearchAllAssets(/*bSynchronousSearch =*/true);
 		UE_LOG(LogCompileAllBlueprints, Display, TEXT("Finished Loading Asset Registry."));
 
 		UE_LOG(LogCompileAllBlueprints, Display, TEXT("Gathering All Blueprints From Asset Registry..."));
-		AssetRegistryModule.Get().GetAssetsByClass(BlueprintBaseClassName, BlueprintAssetList, true);
+		AssetRegistry.GetAssetsByClass(BlueprintBaseClassName, BlueprintAssetList, true);
+
+		//TArray<FString> PathsToScan;
+		//PathsToScan.Add(TEXT("/Game"));
+		//AssetRegistry.ScanPathsSynchronous(PathsToScan);
+		//TArray<FAssetData> AssetItems;
+		//FARFilter Filter;
+		//Filter.ClassNames.Add(BlueprintBaseClassName);
+		//Filter.PackagePaths.Add(TEXT("/Game"));
+		//Filter.bRecursiveClasses = true;
+		//Filter.bRecursivePaths = true;
+		//AssetRegistry.GetAssets(Filter, AssetItems);
 	}
 }
 
