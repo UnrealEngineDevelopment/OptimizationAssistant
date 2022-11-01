@@ -264,14 +264,13 @@ void SBlueprintCompilePage::BuildBlueprints()
 	FScopedSlowTask SlowTask(BlueprintAssetList.Num(), FText::FromString(TEXT("Loading and Compiling Blueprints")));
 	SlowTask.MakeDialog(true);
 
-	for (int32 Index = 0; Index < BlueprintAssetList.Num(); ++Index)
+	for (int32 Index = BlueprintAssetList.Num() - 1; Index >= 0; --Index)
 	{
 		if (SlowTask.ShouldCancel())
 		{
 			break;
 		}
 		SlowTask.EnterProgressFrame(1);
-
 
 		const FAssetData& AssetData = BlueprintAssetList[Index];
 
@@ -302,7 +301,7 @@ void SBlueprintCompilePage::BuildBlueprints()
 				GEngine->TrimMemory();
 			}
 		}
-		BlueprintAssetList.RemoveAtSwap(Index);
+		BlueprintAssetList.RemoveAtSwap(Index, 1, false);
 	}
 	GEngine->TrimMemory();
 }
