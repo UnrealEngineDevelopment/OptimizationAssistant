@@ -577,26 +577,26 @@ void SOptimizationAssistantView::ProcessOptimizationCheck()
 
 	if (EnableStaticMeshCheck == ECheckBoxState::Checked)
 	{
-		SlowTask.EnterProgressFrame(1.0f);
 		StaticMeshOptimizationPage->ProcessOptimizationCheck();
+		SlowTask.EnterProgressFrame(1.0f);
 	}
 
 	if (EnableSkeletalMeshCheck == ECheckBoxState::Checked)
 	{
-		SlowTask.EnterProgressFrame(1.0f);
 		SkeletalMeshOptimizationPage->ProcessOptimizationCheck();
+		SlowTask.EnterProgressFrame(1.0f);
 	}
 
 	if (EnableParticleSystemCheck == ECheckBoxState::Checked)
 	{
-		SlowTask.EnterProgressFrame(1.0f);
 		ParticleSystemOptimizationPage->ProcessOptimizationCheck();
+		SlowTask.EnterProgressFrame(1.0f);
 	}
 
 	if (EnableBlueprintCompileCheck == ECheckBoxState::Checked)
 	{
-		SlowTask.EnterProgressFrame(1.0f);
 		BlueprintCompilePage->ProcessOptimizationCheck();
+		SlowTask.EnterProgressFrame(1.0f);
 	}
 }
 
