@@ -9,9 +9,9 @@ URecommendMeshSettings::URecommendMeshSettings()
 {
 	LODScreenSizes.Add(1.f);
 	LODScreenSizes.Add(0.3f);
+	LODScreenSizes.Add(0.15f);
 	LODScreenSizes.Add(0.1f);
-	LODScreenSizes.Add(0.09f);
-	LODScreenSizes.Add(0.07f);
+	LODScreenSizes.Add(0.05f);
 
 	MaxTrianglesForLODNum.Emplace(5000, 2);
 	MaxTrianglesForLODNum.Emplace(10000, 3);
