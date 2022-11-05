@@ -362,14 +362,14 @@ void SSkeletalMeshOptimizationPage::CheckTrianglesLODNum(USkeletalMesh * Skeleta
 	{
 		int32 MaxTriangles = GetMeshMaxTriangles(SkeletalMesh);
 		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 ThresholdIndex = RuleSettings->TriangleLODThresholds.Num() - 1; ThresholdIndex >= 0; --ThresholdIndex)
+		for (int32 ThresholdIndex = RuleSettings->MaxTrianglesForLODNum.Num() - 1; ThresholdIndex >= 0; --ThresholdIndex)
 		{
-			FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->TriangleLODThresholds[ThresholdIndex];
+			FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->MaxTrianglesForLODNum[ThresholdIndex];
 			if (MaxTriangles >= TriangleLODThreshold.Triangles)
 			{
-				if (NumLODs < TriangleLODThreshold.LODNum)
+				if (NumLODs < TriangleLODThreshold.LODCount)
 				{
-					ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, TriangleLODThreshold.LODNum, NumLODs);
+					ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, TriangleLODThreshold.LODCount, NumLODs);
 					break;
 				}
 			}
@@ -432,11 +432,12 @@ void SSkeletalMeshOptimizationPage::CheckLODScreenSizeLimit(USkeletalMesh * Skel
 		{
 			FSkeletalMeshLODInfo* LODInfo = SkeletalMesh->GetLODInfo(LODIndex);
 			float LODScreenSize = LODInfo->ScreenSize.GetValue();
-			if (const PlatformInfo::FPlatformInfo* TargetPlatform = FOptimizationAssistantHelpers::GetTargetPlatform())
+			const PlatformInfo::FPlatformInfo* TargetPlatform = FOptimizationAssistantHelpers::GetTargetPlatform();
+			if (TargetPlatform)
 			{
 				LODScreenSize = LODInfo->ScreenSize.GetValueForPlatformIdentifiers(TargetPlatform->PlatformGroupName, TargetPlatform->VanillaPlatformName);
 			}
-			float RecommendLODScreenSize = RuleSettings->GetRecommendLODScreenSize(LODIndex);
+			float RecommendLODScreenSize = RuleSettings->GetRecommendLODScreenSize(TargetPlatform? TargetPlatform->PlatformGroupName : NAME_None, LODIndex);
 			if (LODScreenSize < RecommendLODScreenSize * 0.8f)// 误差值0.2
 			{
 				ErrorMessage += FString::Printf(TEXT("第[%d]级LOD的 ScreenSize 不得小于[%f],当前是[%f]\n"), LODIndex, RecommendLODScreenSize, LODScreenSize);
@@ -477,9 +478,9 @@ void SSkeletalMeshOptimizationPage::CheckLODMaterialNumLimit(USkeletalMesh * Ske
 		{
 			FSkeletalMeshLODRenderData& LODData = MeshRenderData->LODRenderData[LODIndex];
 			int32 NumSections = LODData.RenderSections.Num();
-			if (NumSections > RuleSettings->PerLODMaxMaterials)
+			if (NumSections > RuleSettings->LODMaxMaterials)
 			{
-				ErrorMessage += FString::Printf(TEXT("LOD[%d]使用最大的材质数量超过了限制[%d]个，当前有[%d]个\n"), LODIndex, RuleSettings->PerLODMaxMaterials, NumSections);
+				ErrorMessage += FString::Printf(TEXT("LOD[%d]使用最大的材质数量超过了限制[%d]个，当前有[%d]个\n"), LODIndex, RuleSettings->LODMaxMaterials, NumSections);
 			}
 		}
 	}

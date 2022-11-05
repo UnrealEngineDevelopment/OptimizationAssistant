@@ -11,7 +11,7 @@ public:
 	SLATE_END_ARGS()
 
 public:
-
+	typedef TSharedPtr<class FEditorStaticMesh> FEditorStaticMeshPtr;
 	/** Default constructor. */
 	SStaticMeshOptimizationPage();
 
@@ -33,19 +33,19 @@ protected:
 
 	void CheckCullDistance(UStaticMeshComponent* MeshComponent, FString& ErrorMessage);
 	void CheckNetCullDistance(UStaticMeshComponent* MeshComponent, FString& ErrorMessage);
-	void CheckTrianglesLODNum(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODNumLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODTrianglesLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODScreenSizeLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODUVChannelLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODMaterialNumLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckLODDuplicateMaterials(UStaticMesh* StaticMesh, FString& ErrorMessage);
-	void CheckMeshMaterialNumLimit(UStaticMesh* StaticMesh, FString& ErrorMessage);
+	void CheckTrianglesLODNum(FString& ErrorMessage);
+	void CheckLODNumLimit(FString& ErrorMessage);
+	void CheckLODTrianglesLimit(FString& ErrorMessage);
+	void CheckLODScreenSizeLimit(FString& ErrorMessage);
+	void CheckLODUVChannelLimit(FString& ErrorMessage);
+	void CheckLODMaterialNumLimit(FString& ErrorMessage);
+	void CheckLODDuplicateMaterials(FString& ErrorMessage);
+	void CheckMeshMaterialNumLimit(FString& ErrorMessage);
 
 private:
 	/** Property viewing widget */
 	TSharedPtr<IDetailsView>   SettingsView;
-
+	FEditorStaticMeshPtr EditorStaticMesh;
 	class UStaticMeshOptimizationRules* RuleSettings;
 };
 

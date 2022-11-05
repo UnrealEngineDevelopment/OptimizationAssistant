@@ -41,6 +41,7 @@ public class OptimizationAssistant : ModuleRules
 			{
 				"Projects",
 				"InputCore",
+				"RenderCore",
 				"UnrealEd",
                 "EditorStyle",
                 "ToolMenus",
@@ -51,6 +52,9 @@ public class OptimizationAssistant : ModuleRules
                 "AssetRegistry",
                 "TargetPlatform",
                 "DesktopPlatform",
+                "MeshUtilities",
+                "MeshDescription",
+                "StaticMeshDescription",
 
 				// Project Module
                 "HottaFramework",
