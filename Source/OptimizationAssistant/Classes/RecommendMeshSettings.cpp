@@ -41,7 +41,7 @@ float URecommendMeshSettings::GetRecommendLODTrianglesPercent(int32 LODIndex, fl
 
 int32 URecommendMeshSettings::GetRecommendLODTriangles(int32 LODIndex, int32 LOD0Triangles, float LOD0TrianglesPercent/* = 1.f*/)
 {
-	return LOD0Triangles * GetRecommendLODTrianglesPercent(LODIndex, LOD0TrianglesPercent);
+	return  LODIndex == 0 ? MaxTriangles : LOD0Triangles * GetRecommendLODTrianglesPercent(LODIndex, LOD0TrianglesPercent);
 }
 
 void URecommendMeshSettings::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)

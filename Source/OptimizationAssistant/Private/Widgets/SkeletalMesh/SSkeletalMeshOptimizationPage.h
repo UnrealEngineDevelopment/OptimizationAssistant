@@ -11,7 +11,7 @@ public:
 	SLATE_END_ARGS()
 
 public:
-
+	typedef TSharedPtr<class FEditorSkeletalMesh> FEditorSkeletalMeshPtr;
 	/** Default constructor. */
 	SSkeletalMeshOptimizationPage();
 
@@ -34,19 +34,19 @@ protected:
 
 	void CheckCullDistance(USkeletalMeshComponent* MeshComponent, FString& ErrorMessage);
 	void CheckNetCullDistance(USkeletalMeshComponent* MeshComponent, FString& ErrorMessage);
-	void CheckTrianglesLODNum(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODNumLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODTrianglesLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODScreenSizeLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODUVChannelLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODMaterialNumLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckLODDuplicateMaterials(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
-	void CheckMeshMaterialNumLimit(USkeletalMesh* SkeletalMesh, FString& ErrorMessage);
+	void CheckTrianglesLODNum(FString& ErrorMessage);
+	void CheckLODNumLimit(FString& ErrorMessage);
+	void CheckLODTrianglesLimit(FString& ErrorMessage);
+	void CheckLODScreenSizeLimit(FString& ErrorMessage);
+	void CheckLODUVChannelLimit(FString& ErrorMessage);
+	void CheckLODMaterialNumLimit(FString& ErrorMessage);
+	void CheckLODDuplicateMaterials(FString& ErrorMessage);
+	void CheckMeshMaterialNumLimit(FString& ErrorMessage);
 
 private:
 	/** Property viewing widget */
 	TSharedPtr<IDetailsView>   SettingsView;
-
+	FEditorSkeletalMeshPtr EditorSkeletalMesh;
 	class USkeletalMeshOptimizationRules* RuleSettings;
 };
 

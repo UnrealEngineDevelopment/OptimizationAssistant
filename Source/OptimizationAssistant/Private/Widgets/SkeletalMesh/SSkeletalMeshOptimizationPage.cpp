@@ -9,6 +9,7 @@
 #include "OptimizationAssistantHelpers.h"
 #include "OptimizationAssistantGlobalSettings.h"
 #include "Game/SilentCheckComponent.h"
+#include "Classes/EditorSkeletalMesh.h"
 
 SSkeletalMeshOptimizationPage::SSkeletalMeshOptimizationPage()
 {
@@ -47,6 +48,8 @@ void SSkeletalMeshOptimizationPage::Construct(const FArguments& InArgs)
 	[
 		SettingsView.ToSharedRef()
 	];
+
+	EditorSkeletalMesh = MakeShared<FEditorSkeletalMesh>();
 }
 
 int32 SSkeletalMeshOptimizationPage::GetMeshMaxTriangles(USkeletalMesh* SkeletalMesh)
@@ -255,21 +258,24 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck(USkeletalMesh* Skel
 {
 	if (SkeletalMesh && RuleSettings)
 	{
+		EditorSkeletalMesh->Initialize(SkeletalMesh);
 		FString MeshName = SkeletalMesh->GetFullName();
 		FString ErrorMessage;
-		CheckTrianglesLODNum(SkeletalMesh, ErrorMessage);
-		CheckLODNumLimit(SkeletalMesh, ErrorMessage);
-		CheckLODTrianglesLimit(SkeletalMesh, ErrorMessage);
-		CheckLODScreenSizeLimit(SkeletalMesh, ErrorMessage);
-		CheckLODUVChannelLimit(SkeletalMesh, ErrorMessage);
-		CheckLODMaterialNumLimit(SkeletalMesh, ErrorMessage);
-		CheckLODDuplicateMaterials(SkeletalMesh, ErrorMessage);
-		CheckMeshMaterialNumLimit(SkeletalMesh, ErrorMessage);
+		CheckTrianglesLODNum(ErrorMessage);
+		CheckLODNumLimit(ErrorMessage);
+		CheckLODTrianglesLimit(ErrorMessage);
+		CheckLODScreenSizeLimit(ErrorMessage);
+		CheckLODUVChannelLimit(ErrorMessage);
+		CheckLODMaterialNumLimit(ErrorMessage);
+		CheckLODDuplicateMaterials(ErrorMessage);
+		CheckMeshMaterialNumLimit(ErrorMessage);
 		if (!ErrorMessage.IsEmpty())
 		{
 			Ar.Logf(TEXT("%s"), *MeshName);
 			Ar.Logf(TEXT("%s"), *ErrorMessage);
 		}
+		Ar.Logf(TEXT(" ========================== ApplyRecommendMeshSettings =============== "));
+		EditorSkeletalMesh->ApplyRecommendMeshSettings(RuleSettings,Ar);
 	}
 }
 
@@ -353,173 +359,139 @@ void SSkeletalMeshOptimizationPage::CheckNetCullDistance(USkeletalMeshComponent 
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckTrianglesLODNum(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckTrianglesLODNum(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_TrianglesLODNum)) return;
 
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 MaxTriangles = EditorSkeletalMesh->GetNumTriangles();
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 ThresholdIndex = RuleSettings->MaxTrianglesForLODNum.Num() - 1; ThresholdIndex >= 0; --ThresholdIndex)
 	{
-		int32 MaxTriangles = GetMeshMaxTriangles(SkeletalMesh);
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 ThresholdIndex = RuleSettings->MaxTrianglesForLODNum.Num() - 1; ThresholdIndex >= 0; --ThresholdIndex)
+		FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->MaxTrianglesForLODNum[ThresholdIndex];
+		if (MaxTriangles >= TriangleLODThreshold.Triangles)
 		{
-			FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->MaxTrianglesForLODNum[ThresholdIndex];
-			if (MaxTriangles >= TriangleLODThreshold.Triangles)
+			if (NumLODs < TriangleLODThreshold.LODCount)
 			{
-				if (NumLODs < TriangleLODThreshold.LODCount)
-				{
-					ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, TriangleLODThreshold.LODCount, NumLODs);
-					break;
-				}
+				ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, TriangleLODThreshold.LODCount, NumLODs);
+				break;
 			}
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODNumLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODNumLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODNumLimit)) return;
-
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	if (NumLODs > OA_MAX_MESH_LODS)
 	{
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		if (NumLODs > OA_MAX_MESH_LODS)
-		{
-			ErrorMessage += FString::Printf(TEXT("LOD数量超过了限制，最多可有[%d]级，当前有[%d]级.\n"), OA_MAX_MESH_LODS, NumLODs);
-		}
+		ErrorMessage += FString::Printf(TEXT("LOD数量超过了限制，最多可有[%d]级，当前有[%d]级.\n"), OA_MAX_MESH_LODS, NumLODs);
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODTrianglesLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODTrianglesLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODTrianglesLimit)) return;
 
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 MaxTriangles = EditorSkeletalMesh->GetNumTriangles();
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
 	{
-		int32 MaxTriangles = GetMeshMaxTriangles(SkeletalMesh);
-
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
+		int32 LODTriangles = EditorSkeletalMesh->GetNumTriangles(LODIndex);
+		int32 RecommendLODTriangles = RuleSettings->GetRecommendLODTriangles(LODIndex, MaxTriangles);
+		if (LODTriangles > RecommendLODTriangles * GlobalCheckSettings->TrianglesErrorScale)
 		{
-			FSkeletalMeshLODRenderData& LODData = MeshRenderData->LODRenderData[LODIndex];
-			int32 LODTriangles = 0;
-			int32 NumSections = LODData.RenderSections.Num();
-			for (int32 SectionIndex = 0; SectionIndex < NumSections; SectionIndex++)
-			{
-				LODTriangles += LODData.RenderSections[SectionIndex].NumTriangles;
-			}
-			int32 RecommendLODTriangles = RuleSettings->GetRecommendLODTriangles(LODIndex, MaxTriangles);
-			if (LODTriangles > RecommendLODTriangles * GlobalCheckSettings->TrianglesErrorScale)
-			{
-				ErrorMessage += FString::Printf(TEXT("第[%d]级LOD的 Triangles 不得大于[%d]，当前为[%d],推荐[Base LOD[0] Percent of Triangles=%f].\n"), LODIndex, RecommendLODTriangles, LODTriangles, RuleSettings->GetRecommendLODTrianglesPercent(LODIndex));
-			}
+			ErrorMessage += FString::Printf(TEXT("第[%d]级LOD的 Triangles 不得大于[%d]，当前为[%d],推荐[Base LOD[0] Percent of Triangles=%f].\n"), LODIndex, RecommendLODTriangles, LODTriangles, RuleSettings->GetRecommendLODTrianglesPercent(LODIndex));
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODScreenSizeLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODScreenSizeLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODScreenSizeLimit)) return;
 
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
 	{
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
+		float LODScreenSize = EditorSkeletalMesh->GetLODScreenSize(NAME_None, LODIndex);
+		const PlatformInfo::FPlatformInfo* TargetPlatform = FOptimizationAssistantHelpers::GetTargetPlatform();
+		if (TargetPlatform)
 		{
-			FSkeletalMeshLODInfo* LODInfo = SkeletalMesh->GetLODInfo(LODIndex);
-			float LODScreenSize = LODInfo->ScreenSize.GetValue();
-			const PlatformInfo::FPlatformInfo* TargetPlatform = FOptimizationAssistantHelpers::GetTargetPlatform();
-			if (TargetPlatform)
-			{
-				LODScreenSize = LODInfo->ScreenSize.GetValueForPlatformIdentifiers(TargetPlatform->PlatformGroupName, TargetPlatform->VanillaPlatformName);
-			}
-			float RecommendLODScreenSize = RuleSettings->GetRecommendLODScreenSize(TargetPlatform? TargetPlatform->PlatformGroupName : NAME_None, LODIndex);
-			if (LODScreenSize < RecommendLODScreenSize * 0.8f)// 误差值0.2
-			{
-				ErrorMessage += FString::Printf(TEXT("第[%d]级LOD的 ScreenSize 不得小于[%f],当前是[%f]\n"), LODIndex, RecommendLODScreenSize, LODScreenSize);
-			}
+			LODScreenSize = EditorSkeletalMesh->GetLODScreenSize(TargetPlatform->PlatformGroupName, LODIndex);
+		}
+		float RecommendLODScreenSize = RuleSettings->GetRecommendLODScreenSize(TargetPlatform ? TargetPlatform->PlatformGroupName : NAME_None, LODIndex);
+		if (LODScreenSize < RecommendLODScreenSize * 0.8f)// 误差值0.2
+		{
+			ErrorMessage += FString::Printf(TEXT("第[%d]级LOD的 ScreenSize 不得小于[%f],当前是[%f]\n"), LODIndex, RecommendLODScreenSize, LODScreenSize);
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODUVChannelLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODUVChannelLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODUVChannelLimit)) return;
-
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
 	{
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
+		int32 UVChannels = EditorSkeletalMesh->GetNumUVChannels(LODIndex);
+		if (UVChannels > RuleSettings->MaxUVChannels)
 		{
-			FSkeletalMeshLODRenderData& LODData = MeshRenderData->LODRenderData[LODIndex];
-			int32 UVChannels = LODData.GetNumTexCoords();
-			if (UVChannels > RuleSettings->MaxUVChannels)
-			{
-				ErrorMessage += FString::Printf(TEXT("LOD[%d]使用的UV Channels超过了限制[%d]个，当前为[%d]个\n"), LODIndex, RuleSettings->MaxUVChannels, UVChannels);
-			}
+			ErrorMessage += FString::Printf(TEXT("LOD[%d]使用的UV Channels超过了限制[%d]个，当前为[%d]个\n"), LODIndex, RuleSettings->MaxUVChannels, UVChannels);
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODMaterialNumLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODMaterialNumLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODMaterialNumLimit)) return;
-
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
 	{
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
+		int32 NumSections = EditorSkeletalMesh->GetNumMaterials(LODIndex);
+		if (NumSections > RuleSettings->LODMaxMaterials)
 		{
-			FSkeletalMeshLODRenderData& LODData = MeshRenderData->LODRenderData[LODIndex];
-			int32 NumSections = LODData.RenderSections.Num();
-			if (NumSections > RuleSettings->LODMaxMaterials)
-			{
-				ErrorMessage += FString::Printf(TEXT("LOD[%d]使用最大的材质数量超过了限制[%d]个，当前有[%d]个\n"), LODIndex, RuleSettings->LODMaxMaterials, NumSections);
-			}
+			ErrorMessage += FString::Printf(TEXT("LOD[%d]使用最大的材质数量超过了限制[%d]个，当前有[%d]个\n"), LODIndex, RuleSettings->LODMaxMaterials, NumSections);
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckLODDuplicateMaterials(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckLODDuplicateMaterials(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_LODDuplicateMaterials)) return;
 
-	if (FSkeletalMeshRenderData* MeshRenderData = SkeletalMesh->GetResourceForRendering())
+	int32 NumLODs = EditorSkeletalMesh->GetNumLODs();
+	for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
 	{
-		int32 NumLODs = SkeletalMesh->GetLODNum();
-		for (int32 LODIndex = 0; LODIndex < NumLODs; ++LODIndex)
+		FSkeletalMeshLODRenderData& LODData = EditorSkeletalMesh->GetMesh()->GetResourceForRendering()->LODRenderData[LODIndex];
+		TArray<int32> UsedMaterialIndexs;
+		for (const FSkelMeshRenderSection& MaterialSection : LODData.RenderSections)
 		{
-			FSkeletalMeshLODRenderData& LODData = MeshRenderData->LODRenderData[LODIndex];
-			TArray<int32> UsedMaterialIndexs;
-			for (const FSkelMeshRenderSection& MaterialSection : LODData.RenderSections)
+			if (UsedMaterialIndexs.Contains(MaterialSection.MaterialIndex))
 			{
-				if (UsedMaterialIndexs.Contains(MaterialSection.MaterialIndex))
-				{
-					ErrorMessage += FString::Printf(TEXT("LOD[%d]使用多个重复的材质，材质索引[%d]\n"), LODIndex, MaterialSection.MaterialIndex);
-				}
-				else
-				{
-					UsedMaterialIndexs.Add(MaterialSection.MaterialIndex);
-				}
+				ErrorMessage += FString::Printf(TEXT("LOD[%d]使用多个重复的材质，材质索引[%d]\n"), LODIndex, MaterialSection.MaterialIndex);
+			}
+			else
+			{
+				UsedMaterialIndexs.Add(MaterialSection.MaterialIndex);
 			}
 		}
 	}
 }
 
-void SSkeletalMeshOptimizationPage::CheckMeshMaterialNumLimit(USkeletalMesh * SkeletalMesh, FString & ErrorMessage)
+void SSkeletalMeshOptimizationPage::CheckMeshMaterialNumLimit(FString & ErrorMessage)
 {
 	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
 	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_MeshMaterialNumLimit)) return;
 
 	int32 NonLODMaterials = 0;
-	for (const FSkeletalMaterial& SkeletalMaterial : SkeletalMesh->Materials)
+	for (const FSkeletalMaterial& SkeletalMaterial : EditorSkeletalMesh->GetMaterials())
 	{
 		if (!SkeletalMaterial.MaterialSlotName.ToString().Contains(TEXT("LOD"), ESearchCase::CaseSensitive))
 		{

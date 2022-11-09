@@ -55,6 +55,7 @@ public class OptimizationAssistant : ModuleRules
                 "MeshUtilities",
                 "MeshDescription",
                 "StaticMeshDescription",
+                "SkeletalMeshUtilitiesCommon",
 
 				// Project Module
                 "HottaFramework",
