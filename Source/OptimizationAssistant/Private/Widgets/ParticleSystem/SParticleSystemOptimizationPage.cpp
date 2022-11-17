@@ -219,9 +219,11 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystemCo
 		// 网络同步对象，由网络裁剪距离进行裁剪
 		if (bIsReplicated)
 		{
-			if (Actor->NetCullDistanceSquared > (GlobalCheckSettings->MaxNetCullDistanceSquared*GlobalCheckSettings->CullDistanceErrorScale))
+			if (Actor->NetCullDistanceSquared > (GlobalCheckSettings->MaxNetCullDistanceSquared))
 			{
-				ErrorMessage += FString::Printf(TEXT("设置的网络裁剪距离过大[建议网络裁剪距离小于=%f, 当前裁剪距离=%f].\n"), GlobalCheckSettings->MaxNetCullDistanceSquared, Actor->NetCullDistanceSquared);
+				float MinNetCullDistanceSquared = 8000.f*8000.f;
+				float RecommendNetCullDistanceSquared = FMath::Min(MinNetCullDistanceSquared, GlobalCheckSettings->MaxNetCullDistanceSquared);
+				ErrorMessage += FString::Printf(TEXT("设置的网络裁剪距离过大[建议网络裁剪距离小于=%f, 当前裁剪距离=%f].\n"), RecommendNetCullDistanceSquared, Actor->NetCullDistanceSquared);
 				ObjectName = Actor->GetFullName();
 			}
 		}
@@ -240,7 +242,6 @@ void SParticleSystemOptimizationPage::ProcessOptimizationCheck(UParticleSystemCo
 					UParticleLODLevel* LODLevel = Emitter->LODLevels[Emitter->LODLevels.Num() - 1];
 					if (LODLevel && LODLevel->bEnabled)
 					{
-
 						UParticleModuleSpawn* SpawnModule = LODLevel->SpawnModule;
 						float MaxSpawnRate = SpawnModule->GetEstimatedSpawnRate();
 						int32 MaxBurstCount = SpawnModule->GetMaximumBurstCount();
