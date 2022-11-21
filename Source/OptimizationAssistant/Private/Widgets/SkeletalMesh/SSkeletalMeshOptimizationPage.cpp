@@ -109,6 +109,11 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 				continue;
 			}
 
+			if (GlobalCheckSettings->IsInNeverCheckDirectory(Actor->GetFullName()))
+			{
+				continue;
+			}
+
 			TInlineComponentArray<USkeletalMeshComponent*> SkeletalMeshComponents;
 			Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
 			for (USkeletalMeshComponent* MeshComponent : SkeletalMeshComponents)

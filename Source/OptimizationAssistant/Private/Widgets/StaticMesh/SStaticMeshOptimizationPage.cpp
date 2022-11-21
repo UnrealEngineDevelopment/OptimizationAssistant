@@ -95,6 +95,11 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 				continue;
 			}
 
+			if (GlobalCheckSettings->IsInNeverCheckDirectory(Actor->GetFullName()))
+			{
+				continue;
+			}
+
 			TInlineComponentArray<UStaticMeshComponent*> StaticMeshComponents;
 			Actor->GetComponents<UStaticMeshComponent>(StaticMeshComponents, true);
 			for (UStaticMeshComponent* MeshComponent : StaticMeshComponents)
