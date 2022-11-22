@@ -135,6 +135,10 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 
 				if (!ProcessedMeshes.Contains(MeshComponent->SkeletalMesh))
 				{
+					if (GlobalCheckSettings->IsInNeverCheckDirectory(MeshComponent->SkeletalMesh->GetFullName()))
+					{
+						continue;
+					}
 					ProcessedMeshes.Add(MeshComponent->SkeletalMesh);
 					ProcessOptimizationCheck(MeshComponent->SkeletalMesh, *SkeletalMeshArchive);
 				}
@@ -276,11 +280,11 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck(USkeletalMesh* Skel
 		CheckMeshMaterialNumLimit(ErrorMessage);
 		if (!ErrorMessage.IsEmpty())
 		{
+			//Ar.Logf(TEXT(" ========================== ApplyRecommendMeshSettings =============== "));
+			//EditorSkeletalMesh->ApplyRecommendMeshSettings(RuleSettings,Ar);
 			Ar.Logf(TEXT("%s"), *MeshName);
 			Ar.Logf(TEXT("%s"), *ErrorMessage);
 		}
-		//Ar.Logf(TEXT(" ========================== ApplyRecommendMeshSettings =============== "));
-		//EditorSkeletalMesh->ApplyRecommendMeshSettings(RuleSettings,Ar);
 	}
 }
 

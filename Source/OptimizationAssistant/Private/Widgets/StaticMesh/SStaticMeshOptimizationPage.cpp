@@ -121,6 +121,10 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 
 				if (!ProcessedMeshes.Contains(MeshComponent->GetStaticMesh()))
 				{
+					if (GlobalCheckSettings->IsInNeverCheckDirectory(MeshComponent->GetStaticMesh()->GetFullName()))
+					{
+						continue;
+					}
 					ProcessedMeshes.Add(MeshComponent->GetStaticMesh());
 					ProcessOptimizationCheck(MeshComponent->GetStaticMesh(), *ScopeOutputArchive);
 				}
@@ -259,6 +263,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck(UStaticMesh* StaticMe
 				CheckMeshMaterialNumLimit(ErrorMessage);
 				if (!ErrorMessage.IsEmpty())
 				{
+					//EditorStaticMesh->ApplyRecommendMeshSettings(RuleSettings, Ar);
 					Ar.Logf(TEXT("%s"), *MeshName);
 					Ar.Logf(TEXT("%s"), *ErrorMessage);
 				}
