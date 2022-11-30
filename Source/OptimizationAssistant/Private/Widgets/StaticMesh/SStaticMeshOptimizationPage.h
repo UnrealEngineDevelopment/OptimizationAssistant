@@ -41,6 +41,8 @@ protected:
 	void CheckLODMaterialNumLimit(FString& ErrorMessage);
 	void CheckLODDuplicateMaterials(FString& ErrorMessage);
 	void CheckMeshMaterialNumLimit(FString& ErrorMessage);
+	void DumpSortedMeshTriangles(const TArray<UStaticMesh*>& Meshes);
+
 
 private:
 	/** Property viewing widget */

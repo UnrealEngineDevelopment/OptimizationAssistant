@@ -229,6 +229,7 @@ void SSkeletalMeshOptimizationPage::ProcessOptimizationCheck()
 			}
 		}
 	}
+	DumpSortedMeshTriangles(ProcessedMeshes);
 	GEngine->TrimMemory();
 }
 
@@ -512,5 +513,42 @@ void SSkeletalMeshOptimizationPage::CheckMeshMaterialNumLimit(FString & ErrorMes
 	if (NonLODMaterials > RuleSettings->MaxMaterials)
 	{
 		ErrorMessage += FString::Printf(TEXT("Mesh使用的材质数超过了限制[%d]个, 当前为[%d]个.\n"), RuleSettings->MaxMaterials, NonLODMaterials);
+	}
+}
+
+void SSkeletalMeshOptimizationPage::DumpSortedMeshTriangles(const TArray<USkeletalMesh*>& Meshes)
+{
+	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
+	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_SortByTriangles)) return;
+
+	OAHelper::FScopeOutputArchive ScopeOutputArchive(TEXT("SkeletalMeshSortedTriangles"));
+	FOutputDevice& Ar = *ScopeOutputArchive;
+
+	TMap<USkeletalMesh*, int32> MeshTrianglesMapping;
+	for (USkeletalMesh* Mesh : Meshes)
+	{
+		if(Mesh)
+		{
+			int32 MeshTriangles = 0;
+			if (FSkeletalMeshRenderData* MeshRenderData = Mesh->GetResourceForRendering())
+			{
+				FSkeletalMeshLODRenderData& LODRenderData = MeshRenderData->LODRenderData[0];
+				int32 NumSections = LODRenderData.RenderSections.Num();
+				for (int32 SectionIndex = 0; SectionIndex < NumSections; SectionIndex++)
+				{
+					MeshTriangles += LODRenderData.RenderSections[SectionIndex].NumTriangles;
+				}
+			}
+			MeshTrianglesMapping.Add(Mesh, MeshTriangles);
+		}
+	}
+	MeshTrianglesMapping.ValueSort([](int32 Left, int32 Right) {return Left > Right; });
+
+	Ar.Logf(TEXT("%140s %10s"), TEXT("Object"), TEXT("Triangles"));
+
+	for (TPair<USkeletalMesh*, int32> MeshTrianglesPair : MeshTrianglesMapping)
+	{
+		FString MeshName = MeshTrianglesPair.Key->GetFullName();
+		Ar.Logf(TEXT("%140s %10d"), *MeshName, MeshTrianglesPair.Value);
 	}
 }

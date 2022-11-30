@@ -193,6 +193,7 @@ void SStaticMeshOptimizationPage::ProcessOptimizationCheck()
 			}
 		}
 	}
+	DumpSortedMeshTriangles(ProcessedMeshes);
 	GEngine->TrimMemory();
 }
 
@@ -484,5 +485,33 @@ void SStaticMeshOptimizationPage::CheckMeshMaterialNumLimit(FString & ErrorMessa
 	if (NonLODMaterials > RuleSettings->MaxMaterials)
 	{
 		ErrorMessage += FString::Printf(TEXT("Mesh使用的材质数超过了限制[%d]个, 当前为[%d]个.\n"), RuleSettings->MaxMaterials, NonLODMaterials);
+	}
+}
+
+void SStaticMeshOptimizationPage::DumpSortedMeshTriangles(const TArray<UStaticMesh*>& Meshes)
+{
+	UGlobalCheckSettings* GlobalCheckSettings = GetMutableDefault<UGlobalCheckSettings>();
+	if (!GlobalCheckSettings->HasAnyFlags(EOptimizationCheckFlags::OCF_SortByTriangles)) return;
+
+	OAHelper::FScopeOutputArchive ScopeOutputArchive(TEXT("StaticMeshSortedTriangles"));
+	FOutputDevice& Ar = *ScopeOutputArchive;
+
+	TMap<UStaticMesh*, int32> MeshTrianglesMapping;
+	for (UStaticMesh* Mesh : Meshes)
+	{
+		if (Mesh && Mesh->RenderData)
+		{
+			FStaticMeshLODResources& LODModel = Mesh->RenderData->LODResources[0];
+			MeshTrianglesMapping.Add(Mesh, LODModel.GetNumTriangles());
+		}
+	}
+	MeshTrianglesMapping.ValueSort([](int32 Left, int32 Right){return Left > Right;});
+	
+	Ar.Logf(TEXT("%140s %10s"), TEXT("Object"), TEXT("Triangles"));
+	
+	for (TPair<UStaticMesh*, int32> MeshTrianglesPair : MeshTrianglesMapping)
+	{
+		FString MeshName = MeshTrianglesPair.Key->GetFullName();
+		Ar.Logf(TEXT("%140s %10d"), *MeshName, MeshTrianglesPair.Value);
 	}
 }

@@ -18,6 +18,7 @@ enum EOptimizationCheckFlags
 	OCF_LODUVChannelLimit UMETA(DisplayName = "LODUVChannelLimit"),
 	OCF_LODDuplicateMaterials UMETA(DisplayName = "LODDuplicateMaterials"),
 	OCF_MeshMaterialNumLimit UMETA(DisplayName = "MeshMaterialNumLimit"),
+	OCF_SortByTriangles UMETA(DisplayName = "SortMeshByTriangles"),
 	OCF_Max UMETA(Hidden),
 };
 const int32 OCF_DefaultValue = 0xFFFF;
