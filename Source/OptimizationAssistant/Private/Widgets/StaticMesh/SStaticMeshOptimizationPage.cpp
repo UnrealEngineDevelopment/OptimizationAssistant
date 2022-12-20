@@ -501,8 +501,15 @@ void SStaticMeshOptimizationPage::DumpSortedMeshTriangles(const TArray<UStaticMe
 	{
 		if (Mesh && Mesh->RenderData)
 		{
-			FStaticMeshLODResources& LODModel = Mesh->RenderData->LODResources[0];
-			MeshTrianglesMapping.Add(Mesh, LODModel.GetNumTriangles());
+			if (Mesh->RenderData->LODResources.Num() > 0)
+			{
+				FStaticMeshLODResources& LODModel = Mesh->RenderData->LODResources[0];
+				MeshTrianglesMapping.Add(Mesh, LODModel.GetNumTriangles());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("[%s]LODResources is empty, please check asset."), *Mesh->GetFullName());
+			}
 		}
 	}
 	MeshTrianglesMapping.ValueSort([](int32 Left, int32 Right){return Left > Right;});

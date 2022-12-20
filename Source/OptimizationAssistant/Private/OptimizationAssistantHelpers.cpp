@@ -75,7 +75,7 @@ float FOptimizationAssistantHelpers::ComputeDrawDistanceFromScreenSize(const UPr
 
 float FOptimizationAssistantHelpers::ComputeDrawDistanceFromScreenSize(float SphereRadius, float ScreenSize /*= 0.05f*/, float FOV /*= 90.0f*/)
 {
-	static const float FOVRad = 90.0f * (float)PI / 360.0f;
+	static const float FOVRad = FOV * (float)PI / 360.0f;
 	static const FMatrix ProjectionMatrix = FPerspectiveMatrix(FOVRad, 1920, 1080, 0.01f);
 	return ComputeBoundsDrawDistance(ScreenSize, SphereRadius, ProjectionMatrix);
 }
