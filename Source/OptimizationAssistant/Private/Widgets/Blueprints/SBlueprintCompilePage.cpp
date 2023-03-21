@@ -296,7 +296,7 @@ void SBlueprintCompilePage::BuildBlueprints()
 				}
 			}
 
-			if ((Index % 500) == 0)
+			if ((Index % 100) == 0)
 			{
 				GEngine->TrimMemory();
 			}

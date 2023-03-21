@@ -382,9 +382,10 @@ void SSkeletalMeshOptimizationPage::CheckTrianglesLODNum(FString & ErrorMessage)
 		FTriangleLODThresholds& TriangleLODThreshold = RuleSettings->MaxTrianglesForLODNum[ThresholdIndex];
 		if (MaxTriangles >= TriangleLODThreshold.Triangles)
 		{
-			if (NumLODs < TriangleLODThreshold.LODCount)
+			int32 RecommendLODNum = FMath::Min(TriangleLODThreshold.LODCount, 3);
+			if (NumLODs < RecommendLODNum)
 			{
-				ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, TriangleLODThreshold.LODCount, NumLODs);
+				ErrorMessage += FString::Printf(TEXT("[%d]Triangles至少要有[%d]级LOD,当前有[%d]级.\n"), MaxTriangles, RecommendLODNum, NumLODs);
 				break;
 			}
 		}
