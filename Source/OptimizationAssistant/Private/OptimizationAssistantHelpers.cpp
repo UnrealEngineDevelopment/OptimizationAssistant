@@ -54,9 +54,13 @@ void FOptimizationAssistantHelpers::GetDependentPackages(const TSet<FName>& Root
 				UE_LOG(LogOptimizationAssistant, Warning, TEXT("%s"), *FailMessage);
 				continue;
 			}
-			else if (FPackageName::IsScriptPackage(PackageDependencyString) || FPackageName::IsMemoryPackage(PackageDependencyString))
+			else if (FPackageName::IsScriptPackage(PackageDependencyString) || FPackageName::IsMemoryPackage(PackageDependencyString) || FPackageName::IsTempPackage(PackageDependencyString))
 			{
 				continue;
+			}
+			else if ()
+			{
+
 			}
 
 			if (FoundPackages.Contains(PackageDependency) == false)
