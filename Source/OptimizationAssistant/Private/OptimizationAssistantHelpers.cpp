@@ -58,10 +58,10 @@ void FOptimizationAssistantHelpers::GetDependentPackages(const TSet<FName>& Root
 			{
 				continue;
 			}
-			else if ()
-			{
+			//else if ()
+			//{
 
-			}
+			//}
 
 			if (FoundPackages.Contains(PackageDependency) == false)
 			{
