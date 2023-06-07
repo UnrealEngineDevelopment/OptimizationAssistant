@@ -50,18 +50,14 @@ void FOptimizationAssistantHelpers::GetDependentPackages(const TSet<FName>& Root
 			const bool bIncludeReadOnlyRoots = true; // Dependency packages are often script packages (read-only)
 			if (!FPackageName::IsValidLongPackageName(PackageDependencyString, bIncludeReadOnlyRoots, &OutReason))
 			{
-				FString FailMessage = FString::Format(TEXT("Unable to generate long package name for {0}. {1}"), {PackageDependencyString, OutReason.ToString()});
+				FString FailMessage = FString::Format(TEXT("Unable to generate long package name for {0}. {1}"), { PackageDependencyString, OutReason.ToString() });
 				UE_LOG(LogOptimizationAssistant, Warning, TEXT("%s"), *FailMessage);
 				continue;
 			}
-			else if (FPackageName::IsScriptPackage(PackageDependencyString) || FPackageName::IsMemoryPackage(PackageDependencyString) || FPackageName::IsTempPackage(PackageDependencyString))
+			else if (FPackageName::IsScriptPackage(PackageDependencyString) || FPackageName::IsMemoryPackage(PackageDependencyString))
 			{
 				continue;
 			}
-			//else if ()
-			//{
-
-			//}
 
 			if (FoundPackages.Contains(PackageDependency) == false)
 			{
